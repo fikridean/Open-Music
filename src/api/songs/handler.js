@@ -43,7 +43,10 @@ class SongsHandler {
   }
 
   async getAllSongsHandler(request, h) {
-    const songs = await this.service.getAllSongs();
+    this.validator.validateSongSearchQuery(request.query);
+    const { title = '', performer = '' } = request.query;
+
+    const songs = await this.service.getAllSongs(title, performer);
 
     const response = h.response({
       status: 'success',

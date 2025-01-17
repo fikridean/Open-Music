@@ -9,4 +9,9 @@ const SongPayloadSchema = Joi.object({
   albumId: Joi.string(),
 });
 
-module.exports = { SongPayloadSchema };
+const SongSearchSchema = Joi.object({
+  title: Joi.string(),
+  performer: Joi.string(),
+});
+
+module.exports = { SongPayloadSchema, SongSearchSchema };
