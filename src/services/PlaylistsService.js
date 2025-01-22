@@ -153,6 +153,7 @@ class PlaylistsService {
       text: 'INSERT INTO playlist_activities VALUES($1, $2, $3, $4, $5, $6) RETURNING id',
       values: [id, playlistId, songId, userId, action, new Date().toISOString()],
     };
+    console.log(query);
 
     const result = await this.pool.query(query);
 
@@ -185,8 +186,6 @@ class PlaylistsService {
       playlistId,
       activities,
     };
-
-    console.log(result);
 
     return result;
   }

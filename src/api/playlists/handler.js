@@ -104,6 +104,7 @@ class PlaylistsHandler {
     await this.service.verifyPlaylistAccess(id, credentialId);
     await this.service.deleteSongFromPlaylist(id, songId);
     await this.service.addActivity(id, songId, credentialId, 'delete');
+    console.log('deleteSongFromPlaylistHandler');
 
     const response = h.response({
       status: 'success',
