@@ -6,12 +6,10 @@ const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const AuthorizationError = require('../exceptions/AuthorizationError');
 
-const CollaborationService = require('./CollaborationsService');
-
 class PlaylistsService {
-  constructor() {
+  constructor(CollaborationService) {
     this.pool = new Pool();
-    this.collaborationService = new CollaborationService();
+    this.collaborationService = CollaborationService;
   }
 
   async addPlaylist(name, owner) {
@@ -153,7 +151,6 @@ class PlaylistsService {
       text: 'INSERT INTO playlist_activities VALUES($1, $2, $3, $4, $5, $6) RETURNING id',
       values: [id, playlistId, songId, userId, action, new Date().toISOString()],
     };
-    console.log(query);
 
     const result = await this.pool.query(query);
 

@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const path = require('path');
+const Inert = require('@hapi/inert');
 
 // Users
 const users = require('./api/users');
@@ -34,15 +36,24 @@ const collaborations = require('./api/collaborations');
 const CollaborationsService = require('./services/CollaborationsService');
 const CollaborationsValidator = require('./validator/collaborations');
 
+// exports
+const apiExports = require('./api/exports');
+const ExportsService = require('./services/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/exports');
+
+// Storage
+const StorageService = require('./services/storage/StorageService');
+
 const ClientError = require('./exceptions/ClientError');
 
 const init = async () => {
+  const storageService = new StorageService(path.resolve(__dirname, 'api/albums/file/images'));
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
-  const playlistsService = new PlaylistsService();
   const collaborationsService = new CollaborationsService();
+  const playlistsService = new PlaylistsService(collaborationsService);
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -57,6 +68,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -97,7 +111,8 @@ const init = async () => {
     {
       plugin: albums,
       options: {
-        service: albumsService,
+        albumsService,
+        storageService,
         validator: AlbumsValidator,
       },
     },
@@ -121,6 +136,14 @@ const init = async () => {
         collaborationsService,
         playlistsService,
         validator: CollaborationsValidator,
+      },
+    },
+    {
+      plugin: apiExports,
+      options: {
+        ExportsService,
+        playlistsService,
+        validator: ExportsValidator,
       },
     },
   ]);
