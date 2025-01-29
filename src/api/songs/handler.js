@@ -46,31 +46,45 @@ class SongsHandler {
     this.validator.validateSongSearchQuery(request.query);
     const { title = '', performer = '' } = request.query;
 
-    const songs = await this.service.getAllSongs(title, performer);
+    const { result, cache } = await this.service.getAllSongs(title, performer);
 
     const response = h.response({
       status: 'success',
       data: {
-        songs,
+        songs: result,
       },
     });
 
     response.code(200);
+
+    if (cache) {
+      response.header('X-Data-Source', 'cache');
+    } else {
+      response.header('X-Data-Source', 'db');
+    }
+
     return response;
   }
 
   async getSongByIdHandler(request, h) {
     const { id } = request.params;
-    const song = await this.service.getSongById(id);
+    const { result, cache } = await this.service.getSongById(id);
 
     const response = h.response({
       status: 'success',
       data: {
-        song,
+        song: result,
       },
     });
 
     response.code(200);
+
+    if (cache) {
+      response.header('X-Data-Source', 'cache');
+    } else {
+      response.header('X-Data-Source', 'db');
+    }
+
     return response;
   }
 

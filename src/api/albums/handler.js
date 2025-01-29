@@ -31,16 +31,23 @@ class AlbumsHandler {
   async getAlbumByIdHandler(request, h) {
     const { id } = request.params;
 
-    const album = await this.service.getAlbumById(id);
+    const { result, cache } = await this.service.getAlbumById(id);
 
     const response = h.response({
       status: 'success',
       data: {
-        album,
+        album: result,
       },
     });
 
     response.code(200);
+
+    if (cache) {
+      response.header('X-Data-Source', 'cache');
+    } else {
+      response.header('X-Data-Source', 'db');
+    }
+
     return response;
   }
 
@@ -118,16 +125,23 @@ class AlbumsHandler {
 
   async getAlbumLikesByIdHandler(request, h) {
     const { id } = request.params;
-    const likes = await this.service.getAlbumLikesById(id);
+    const { result, cache } = await this.service.getAlbumLikesById(id);
 
     const response = h.response({
       status: 'success',
       data: {
-        likes,
+        likes: result,
       },
     });
 
     response.code(200);
+
+    if (cache) {
+      response.header('X-Data-Source', 'cache');
+    } else {
+      response.header('X-Data-Source', 'db');
+    }
+
     return response;
   }
 

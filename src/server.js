@@ -44,14 +44,19 @@ const ExportsValidator = require('./validator/exports');
 // Storage
 const StorageService = require('./services/storage/StorageService');
 
+// Cache
+const CacheService = require('./services/redis/CacheService');
+
+// Errors
 const ClientError = require('./exceptions/ClientError');
 
 const init = async () => {
+  const cacheService = new CacheService();
   const storageService = new StorageService(path.resolve(__dirname, 'api/albums/file/images'));
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
-  const albumsService = new AlbumsService();
-  const songsService = new SongsService();
+  const albumsService = new AlbumsService(cacheService);
+  const songsService = new SongsService(cacheService);
   const collaborationsService = new CollaborationsService();
   const playlistsService = new PlaylistsService(collaborationsService);
 

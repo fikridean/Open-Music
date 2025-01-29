@@ -6,8 +6,9 @@ const NotFoundError = require('../exceptions/NotFoundError');
 const InvariantError = require('../exceptions/InvariantError');
 
 class SongsService {
-  constructor() {
+  constructor(cacheService) {
     this.pool = new Pool();
+    this.cacheService = cacheService;
   }
 
   async addSong(
@@ -32,6 +33,8 @@ class SongsService {
       throw new InvariantError('Song gagal ditambahkan');
     }
 
+    await this.cacheService.del('songs:all');
+
     return result.rows[0].id;
   }
 
@@ -39,12 +42,22 @@ class SongsService {
     let result;
 
     if (!title && !performer) {
-      result = await this.pool.query('SELECT id, title, performer FROM songs');
+      try {
+        result = await this.cacheService.get('songs:all');
+        return {
+          result: JSON.parse(result),
+          cache: true,
+        };
+      } catch (error) {
+        result = await this.pool.query('SELECT id, title, performer FROM songs');
+        await this.cacheService.set('songs:all', JSON.stringify(result.rows));
+      }
     } else if (title && !performer) {
       result = await this.pool.query({
         text: 'SELECT id, title, performer FROM songs WHERE title ILIKE $1',
         values: [`%${title}%`],
       });
+      await this.cacheService.set(`songs:title:${title}`, JSON.stringify(result.rows));
     } else if (!title && performer) {
       result = await this.pool.query({
         text: 'SELECT id, title, performer FROM songs WHERE performer ILIKE $1',
@@ -55,24 +68,41 @@ class SongsService {
         text: 'SELECT id, title, performer FROM songs WHERE title ILIKE $1 AND performer ILIKE $2',
         values: [`%${title}%`, `%${performer}%`],
       });
+      await this.cacheService.set(`songs:title:${title}`, JSON.stringify(result.rows));
     }
 
-    return result.rows;
+    return {
+      result: result.rows,
+      cache: false,
+    };
   }
 
   async getSongById(id) {
-    const query = {
-      text: 'SELECT * FROM songs WHERE id = $1',
-      values: [id],
-    };
+    try {
+      const result = await this.cacheService.get(`song:${id}`);
+      return {
+        result: JSON.parse(result),
+        cache: true,
+      };
+    } catch (error) {
+      const query = {
+        text: 'SELECT * FROM songs WHERE id = $1',
+        values: [id],
+      };
 
-    const result = await this.pool.query(query);
+      const result = await this.pool.query(query);
 
-    if (!result.rows.length) {
-      throw new NotFoundError('Song tidak ditemukan');
+      if (!result.rows.length) {
+        throw new NotFoundError('Song tidak ditemukan');
+      }
+
+      await this.cacheService.set(`song:${id}`, JSON.stringify(result.rows[0]));
+
+      return {
+        result: result.rows[0],
+        cache: false,
+      };
     }
-
-    return result.rows[0];
   }
 
   async editSongById(id, {
@@ -94,6 +124,9 @@ class SongsService {
       throw new NotFoundError('Gagal memperbarui song. Id tidak ditemukan');
     }
 
+    await this.cacheService.del('songs:all');
+    await this.cacheService.del(`song:${id}`);
+
     return result.rows[0].id;
   }
 
@@ -108,6 +141,9 @@ class SongsService {
     if (!result.rows.length) {
       throw new NotFoundError('Gagal menghapus song. Id tidak ditemukan');
     }
+
+    await this.cacheService.del('songs:all');
+    await this.cacheService.del(`song:${id}`);
 
     return result.rows[0].id;
   }

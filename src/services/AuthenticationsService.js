@@ -3,7 +3,8 @@ const { Pool } = require('pg');
 const InvariantError = require('../exceptions/InvariantError');
 
 class AuthenticationsService {
-  constructor() {
+  constructor(usersService) {
+    this.usersService = usersService;
     this.pool = new Pool();
   }
 
