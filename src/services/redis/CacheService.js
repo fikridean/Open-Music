@@ -13,7 +13,7 @@ class CacheService {
     this.client.connect();
   }
 
-  async set(key, value, expirationInSecond = 60 * 30) {
+  async set(key, value, expirationInSecond = 1800) {
     await this.client.set(key, value, {
       EX: expirationInSecond,
     });
