@@ -30,16 +30,23 @@ class PlaylistsHandler {
 
   async getPlaylistsHandler(request, h) {
     const { id: credentialId } = request.auth.credentials;
-    const playlists = await this.service.getPlaylists(credentialId);
+    const { result, cache } = await this.service.getPlaylists(credentialId);
 
     const response = h.response({
       status: 'success',
       data: {
-        playlists,
+        playlists: result,
       },
     });
 
     response.code(200);
+
+    if (cache) {
+      response.header('X-Data-Source', 'cache');
+    } else {
+      response.header('X-Data-Source', 'db');
+    }
+
     return response;
   }
 
@@ -48,7 +55,7 @@ class PlaylistsHandler {
     const { id: credentialId } = request.auth.credentials;
 
     await this.service.verifyPlaylistOwner(id, credentialId);
-    await this.service.deletePlaylistById(id);
+    await this.service.deletePlaylistById(id, credentialId);
 
     const response = h.response({
       status: 'success',
@@ -82,16 +89,23 @@ class PlaylistsHandler {
     const { id: credentialId } = request.auth.credentials;
 
     await this.service.verifyPlaylistAccess(id, credentialId);
-    const playlist = await this.service.getSongsInPlaylist(id);
+    const { result, cache } = await this.service.getSongsInPlaylist(id);
 
     const response = h.response({
       status: 'success',
       data: {
-        playlist,
+        playlist: result,
       },
     });
 
     response.code(200);
+
+    if (cache) {
+      response.header('X-Data-Source', 'cache');
+    } else {
+      response.header('X-Data-Source', 'db');
+    }
+
     return response;
   }
 
@@ -119,14 +133,21 @@ class PlaylistsHandler {
     const { id: credentialId } = request.auth.credentials;
 
     await this.service.verifyPlaylistAccess(id, credentialId);
-    const activities = await this.service.getPlaylistActivities(id);
+    const { result, cache } = await this.service.getPlaylistActivities(id);
 
     const response = h.response({
       status: 'success',
-      data: activities,
+      data: result,
     });
 
     response.code(200);
+
+    if (cache) {
+      response.header('X-Data-Source', 'cache');
+    } else {
+      response.header('X-Data-Source', 'db');
+    }
+
     return response;
   }
 }

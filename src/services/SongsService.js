@@ -57,7 +57,6 @@ class SongsService {
         text: 'SELECT id, title, performer FROM songs WHERE title ILIKE $1',
         values: [`%${title}%`],
       });
-      await this.cacheService.set(`songs:title:${title}`, JSON.stringify(result.rows));
     } else if (!title && performer) {
       result = await this.pool.query({
         text: 'SELECT id, title, performer FROM songs WHERE performer ILIKE $1',
@@ -68,7 +67,6 @@ class SongsService {
         text: 'SELECT id, title, performer FROM songs WHERE title ILIKE $1 AND performer ILIKE $2',
         values: [`%${title}%`, `%${performer}%`],
       });
-      await this.cacheService.set(`songs:title:${title}`, JSON.stringify(result.rows));
     }
 
     return {

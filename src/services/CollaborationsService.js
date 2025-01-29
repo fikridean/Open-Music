@@ -5,8 +5,9 @@ const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
 
 class CollaborationsService {
-  constructor() {
+  constructor(cacheService) {
     this.pool = new Pool();
+    this.cacheService = cacheService;
   }
 
   async addCollaboration(credentialId, playlistId, userId) {
@@ -63,6 +64,8 @@ class CollaborationsService {
     if (!result.rows.length) {
       throw new InvariantError('Kolaborasi gagal dihapus');
     }
+
+    await this.cacheService.del(`playlists:${userId}`);
 
     return result.rows[0].id;
   }
